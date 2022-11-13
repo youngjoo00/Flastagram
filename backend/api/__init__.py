@@ -6,14 +6,16 @@ from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from marshmallow import ValidationError
 from datetime import timedelta
+from flask_uploads import configure_uploads, patch_request_class
 
 from .db import db
 from .ma import ma
 
 from .models import user, post, comment
-
-from .resources.post import PostList, Post
-from .resources.user import UserRegister, UserLogin, RefreshToken
+from .utils.image_upload import IMAGE_SET
+from .resources.post import Post, PostList
+from .resources.user import RefreshToken, UserRegister, UserLogin
+from .resources.image import PostImageUpload, ProfileImageUpload, Image
 
 
 def create_app():
@@ -26,6 +28,9 @@ def create_app():
     app.config["JSON_AS_ASCII"] = False
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+    
+    configure_uploads(app, IMAGE_SET)
+    
     api = Api(app)
     jwt = JWTManager(app)
 
@@ -80,5 +85,7 @@ def create_app():
     api.add_resource(UserRegister, "/register/")
     api.add_resource(UserLogin, "/login/")
     api.add_resource(RefreshToken, "/refresh/")
-    
+    api.add_resource(PostImageUpload, "/upload/post/image/")
+    api.add_resource(ProfileImageUpload, "/upload/profile/image/")
+    api.add_resource(Image, "/statics/<path:path>")
     return app
