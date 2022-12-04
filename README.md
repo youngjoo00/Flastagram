@@ -1,21 +1,60 @@
-# Flastagram 구조
+# 프로젝트 이름
 
-1. Backend
+<p align="center">
+  <br>
+  <img src="./images/common/logo-sample.jpeg">
+  <br>
+</p>
 
-주로 api 폴더에서 기능들이 구현된다.
-api/resources는 게시물, 유저, 댓글에 관한 CRUD 기능을 구현한다.
+목차
 
-사용자가 어떠한 기능을 이용하기 위해 CRUD 기능을 이용할 때
-1차로 resources에서 요청을 받은 다음
-필요한 스키마, 모델이 있다면 api/schema, api/model 에 접근하여 기능을 구현함
+## 프로젝트 소개
 
-2. Frontend
+<p align="justify">
+프로젝트 개요/동기
+</p>
 
-주로 assets 폴더에서 사용자가 보는 화면을 뿌려주는 역할을 한다.
+<p align="center">
+GIF Images
+</p>
 
-현재 가능한 기능 목록
+<br>
 
-1) assets/js/post_create.js : 사용자가 게시물을 작성한다면, 페이지에 띄우는 역할을 한다.
+## 기술 스택
 
-2) assets/js/post_list.js : 사용자가 Flastagram 의 post_list.html 에서 보여주는 메인 페이지를 보려고 할 때
-게시물들의 목록을 페이지네이션을 통해 10개의 게시물을 보여주고, 무한스크롤을 구현하여 스크롤을 내린다면 다음 게시물 10개를 보여주는 역할을 한다.
+| JavaScript | TypeScript |  React   |  Node   |
+| :--------: | :--------: | :------: | :-----: |
+|   ![js]    |   ![ts]    | ![react] | ![node] |
+
+<br>
+
+## 구현 기능
+
+### 기능 1
+
+### 기능 2
+
+### 기능 3
+
+### 기능 4
+
+<br>
+
+## 배운 점 & 아쉬운 점
+
+<p align="justify">
+
+</p>
+
+<br>
+
+## 라이센스
+
+MIT &copy; [NoHack](mailto:lbjp114@gmail.com)
+
+<!-- Stack Icon Refernces -->
+
+[js]: /images/stack/javascript.svg
+[ts]: /images/stack/typescript.svg
+[react]: /images/stack/react.svg
+[node]: /images/stack/node.svg
