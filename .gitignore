@@ -168,3 +168,19 @@ cython_debug/
 #.idea/
 
 # End of https://www.toptal.com/developers/gitignore/api/flask
+
+instance/*
+!instance/.gitignore
+.webassets-cache
+.env
+.env.example
+migrations
+__pycache__/
+*.py[cod]
+*$py.class
+venv
+*.db
+frontend/assets/img
+.vscode
+node_modules/
+.eslintrc.js

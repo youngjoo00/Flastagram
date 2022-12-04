@@ -2,6 +2,7 @@ from api.ma import ma, Method, String
 from api.models.post import PostModel
 from api.models.user import UserModel
 from marshmallow import fields
+from api.schemas.user import AuthorSchema
 
 
 class PostSchema(ma.SQLAlchemyAutoSchema):
@@ -13,11 +14,7 @@ class PostSchema(ma.SQLAlchemyAutoSchema):
 
     created_at = fields.DateTime(format="%Y-%m-%d,%H:%M:%S")
     updated_at = fields.DateTime(format="%Y-%m-%d,%H:%M:%S")
-
-    author_name = Method("get_author_name")
-
-    def get_author_name(self, obj):
-        return obj.author.username
+    author = fields.Nested(AuthorSchema)
 
     class Meta:
         model = PostModel

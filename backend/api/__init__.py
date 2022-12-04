@@ -7,9 +7,7 @@ from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from flask_uploads import configure_uploads, patch_request_class  # 추가!
 from marshmallow import ValidationError
-
 from api.utils.image_upload import IMAGE_SET
-
 
 from .db import db
 from .ma import ma
@@ -18,7 +16,7 @@ from .models import user, post, comment
 
 
 from .resources.post import PostList, Post
-from .resources.user import UserRegister, UserLogin, RefreshToken
+from .resources.user import UserRegister, UserLogin, RefreshToken, MyPage
 from .resources.image import PostImageUpload, ProfileImageUpload, Image
 from .resources.comment import CommentList, CommentDetail
 
@@ -96,6 +94,9 @@ def create_app():
     api.add_resource(ProfileImageUpload, "/upload/profile/image/")
     api.add_resource(Image, "/statics/<path:path>")
 
+    # 마이페이지 API
+    api.add_resource(MyPage, "/mypage/<int:id>/")
+    
     # 댓글 API
     api.add_resource(CommentList, "/posts/<int:post_id>/comments/")
     api.add_resource(
