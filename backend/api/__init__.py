@@ -1,53 +1,51 @@
+from datetime import timedelta
 from flask import Flask, jsonify
 from flask_restful import Api
 from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
+from flask_uploads import configure_uploads, patch_request_class  # 추가!
 from marshmallow import ValidationError
-from datetime import timedelta
-from flask_uploads import configure_uploads, patch_request_class
+from api.utils.image_upload import IMAGE_SET
 
 from .db import db
 from .ma import ma
 
 from .models import user, post, comment
-from .utils.image_upload import IMAGE_SET
-from .resources.post import Post, PostList
-from .resources.user import RefreshToken, UserRegister, UserLogin
+
+
+from .resources.post import PostList, Post
+from .resources.user import UserRegister, UserLogin, RefreshToken, MyPage
 from .resources.image import PostImageUpload, ProfileImageUpload, Image
+from .resources.comment import CommentList, CommentDetail
 
 
 def create_app():
     app = Flask(__name__)
+
     CORS(app, resources={r"*": {"origins": "*"}})
     load_dotenv(".env", verbose=True)
     app.config.from_object("config.dev")
     app.config.from_envvar("APPLICATION_SETTINGS")
-    app.config.update(RESTFUL_JSON=dict(ensure_ascii=False))
-    app.config["JSON_AS_ASCII"] = False
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
-    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
-    
+
     configure_uploads(app, IMAGE_SET)
-    
+
     api = Api(app)
     jwt = JWTManager(app)
-
     migrate = Migrate(app, db)
 
     db.init_app(app)
     ma.init_app(app)
     migrate.init_app(app, db)
 
-    @app.before_first_request
     def create_tables():
         db.create_all()
 
     @app.errorhandler(ValidationError)
     def handle_marshmallow_validation(err):
         return jsonify(err.messages), 400
-    
+
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
         """
@@ -70,7 +68,9 @@ def create_app():
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
-        """ """
+        """
+        클라이언트에 토큰이 담겨오지 않았을 때의 에러 메시지를 지정합니다.
+        """
         return (
             jsonify(
                 {
@@ -79,13 +79,28 @@ def create_app():
             ),
             401,
         )
-    # register Resources...
+
+    # 게시물 API
     api.add_resource(PostList, "/posts/")
     api.add_resource(Post, "/posts/<int:id>")
+
+    # 회원가입, 로그인 API
     api.add_resource(UserRegister, "/register/")
     api.add_resource(UserLogin, "/login/")
     api.add_resource(RefreshToken, "/refresh/")
+
+    # 이미지 업로드, 조회 API
     api.add_resource(PostImageUpload, "/upload/post/image/")
     api.add_resource(ProfileImageUpload, "/upload/profile/image/")
     api.add_resource(Image, "/statics/<path:path>")
+
+    # 마이페이지 API
+    api.add_resource(MyPage, "/mypage/<int:id>/")
+    
+    # 댓글 API
+    api.add_resource(CommentList, "/posts/<int:post_id>/comments/")
+    api.add_resource(
+        CommentDetail, "/posts/<int:post_id>/comments/<int:comment_id>/"
+    )
+
     return app

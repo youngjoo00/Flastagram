@@ -1,26 +1,29 @@
 from flask_restful import Resource, request
-from marshmallow import ValidationError
 from api.models.post import PostModel, db
-from api.schemas.post import PostSchema
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from marshmallow import ValidationError
 from api.models.user import UserModel
+from api.schemas.post import PostSchema
+from marshmallow import ValidationError
+from flask_jwt_extended import jwt_required
+from flask import abort
+from flask_jwt_extended import get_jwt_identity
 
 post_schema = PostSchema()
 post_list_schema = PostSchema(many=True)
 
+
 class Post(Resource):
-  @classmethod
-  def get(cls, id):
-    post_json = request.get_json()
-    post = PostModel.find_by_id(id)
-    if post:
-      return post_schema.dump(post), 200
-    return {"Error" : "게시물을 찾을 수 없습니다."}, 404
-  
-  @classmethod
-  @jwt_required()
-  def put(cls, id):
+    @classmethod
+    @jwt_required()
+    def get(cls, id):
+        post = PostModel.find_by_id(id)
+        if post:
+            return post_schema.dump(post), 200
+        else:
+            return {"Error": "게시물을 찾을 수 없습니다."}, 404
+
+    @classmethod
+    @jwt_required()
+    def put(cls, id):
         """
         게시물의 전체 내용을 받아서 게시물을 수정
         없는 리소스를 수정하려고 한다면 HTTP 404 상태 코드와 에러 메시지를,
@@ -45,47 +48,46 @@ class Post(Resource):
             return {"Error": "게시물은 작성자만 수정할 수 있습니다."}, 403
 
         return post_schema.dump(post), 200
-  
-  @classmethod
-  @jwt_required()
-  def delete(cls, id): 
-    username = get_jwt_identity()
-    author_id = UserModel.find_by_username(username).id
-    post = PostModel.find_by_id(id)
-    # 게시물의 존재 여부를 먼저 체크한다.
-    if not post:
+
+    @classmethod
+    @jwt_required()
+    def delete(cls, id):
+        post = PostModel.find_by_id(id)
+        if post:
+            post.delete_from_db()
+            return {"message": "게시물이 성공적으로 삭제되었습니다."}, 200
         return {"Error": "게시물을 찾을 수 없습니다."}, 404
-    if post.author_id == author_id:
-        post.delete_from_db()
-        return {"message" : "게시물이 성공적으로 삭제되었습니다."}, 200
-    else:
-      return {"Error" : "게시물은 작성자만 삭제할 수 있습니다."}, 403
-  
+
 
 class PostList(Resource):
-  @classmethod
-  def get(cls):
-    page = request.args.get("page", type=int, default=1)
-    ordered_posts = PostModel.query.order_by(PostModel.id.desc())
-    pagination = ordered_posts.paginate(per_page=10)
-    result = post_list_schema.dump(pagination.items)
-    return result
-    # return post_list_schema.dump(PostModel.find_all()), 200
-    
-  @classmethod
-  @jwt_required()
-  def post(cls):
-        post_json = request.get_json()  #json 데이터를 받아옴
+    """
+    게시물 목록에 관한 GET, POST 요청을 처리
+    GET : 모든 게시물의 목록을 보여줌
+    POST : 게시물을 하나 생성함
+    """
+
+    @classmethod
+    @jwt_required()
+    def get(cls):
+        page = request.args.get("page", type=int, default=1)
+        ordered_posts = PostModel.query.order_by(PostModel.id.desc())
+        pagination = ordered_posts.paginate(page, per_page=10)
+        result = post_list_schema.dump(pagination.items)
+        return result
+
+    @classmethod
+    @jwt_required()
+    def post(cls):
+        post_json = request.get_json()
         username = get_jwt_identity()
         author_id = UserModel.find_by_username(username).id
-        print(author_id)
-        try:         
-            new_post = post_schema.load(post_json)  #게시물 인스턴스로 변환
+        try:
+            new_post = post_schema.load(post_json)
             new_post.author_id = author_id
         except ValidationError as err:
             return err.messages, 400
         try:
-            new_post.save_to_db()   #변환한 것을 데이터베이스에 저장
+            new_post.save_to_db()
         except:
-            return {"Error" : "저장에 실패하였습니다."}, 500
+            return {"Error": "저장에 실패하였습니다."}, 500
         return post_schema.dump(new_post), 201

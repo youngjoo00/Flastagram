@@ -5,12 +5,14 @@ from sqlalchemy.sql import func
 class PostModel(db.Model):
     """
     Flastagram 게시물 모델
+
     title       : 게시물의 제목, 150자 제한
     content     : 게시물의 내용, 500자 제한
     created_at  : 게시물의 생성일자, 기본적으로 현재가 저장
     updated_at  : 게시물의 생성일자, 게시물이 수정될 때마다 업데이트
     author_id   : 게시물의 저자 id, 외래 키
     comment_set : 게시물에 달린 댓글들
+    image       : 게시물에 첨부된 이미지 파일의 주소
     """
 
     __tablename__ = "Post"
@@ -19,12 +21,20 @@ class PostModel(db.Model):
     title = db.Column(db.String(150))
     content = db.Column(db.String(500))
     created_at = db.Column(db.DateTime(timezone=True), default=func.now())
-    updated_at = db.Column(db.DateTime(timezone=True), default=func.now(), onupdate=func.now())
-    author_id = db.Column(db.Integer, db.ForeignKey("User.id", ondelete="CASCADE"), nullable=False)
+    updated_at = db.Column(
+        db.DateTime(timezone=True), default=func.now(), onupdate=func.now()
+    )
+    author_id = db.Column(
+        db.Integer,
+        db.ForeignKey("User.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     author = db.relationship("UserModel", backref="post_author")
-    comment_set = db.relationship("CommentModel", backref="post", passive_deletes=True)
+    comment_set = db.relationship(
+        "CommentModel", backref="post", passive_deletes=True, lazy="dynamic"
+    )
     image = db.Column(db.String(255))
-    
+
     @classmethod
     def find_by_id(cls, id):
         """
@@ -49,8 +59,16 @@ class PostModel(db.Model):
         """
         db.session.delete(self)
         db.session.commit()
-    
+
     def update_to_db(self, data):
+        """
+        데이터베이스에 존재하는 게시물을 수정
+        data = {
+                 "title":"example content",
+                 "content":"example content"
+                 }
+        형태의 딕셔너리가 들어올 것이라고 가정
+        """
         for key, value in data.items():
             setattr(self, key, value)
         db.session.commit()
