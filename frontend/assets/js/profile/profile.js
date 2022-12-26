@@ -1,11 +1,64 @@
 /**
+ * 회원정보 조회 API로부터 현재 로그인한 유저의 정보를 가져옵니다.
+ */
+async function getProfileDatafromAPI() {
+  userId = await decodeJWT(ACCESS_TOKEN)["user_id"];
+  try {
+    let myHeaders = new Headers();
+    myHeaders.append("Authorization", `Bearer ${ACCESS_TOKEN}`);
+    myHeaders.append("Content-Type", "application/json");
+    let requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+    };
+    let rawResult = await fetch(MYPAGE_API_URL + userId + "/", requestOptions);
+    // 만약 액세스 토큰이 만료되었다면, 새로운 액세스 토큰을 받아옵니다.
+    if (rawResult.status == 401) {
+      getNewJWT();
+    }
+    rawResult = await fetch(MYPAGE_API_URL + userId + "/", requestOptions);
+
+    // 만약 리프레시 토큰도 만료되었다면, 로그인 페이지로 리다이렉트 처리합니다.
+    if (rawResult.status == 401) {
+      window.location.href = LOGIN_FRONTEND_URL;
+    }
+    const result = rawResult.json();
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+/**
+ * API 로부터 가져온 정보로 팝업창의 프로필 정보를 채웁니다.
+ */
+async function loadProfileInformation() {
+  const userInformationFromAPI = await getProfileDatafromAPI();
+  let imageDiv = document.querySelector("#preview-image");
+  imageDiv.style.backgroundImage = `url(${
+    STATIC_FILES_API_URL + userInformationFromAPI["image"]
+  })`;
+  imageDiv.style.backgroundSize = "100% 100%";
+
+  email = document.querySelector("#email-input");
+  email.value = userInformationFromAPI["email"];
+  username = document.querySelector("#username-input");
+  username.value = userInformationFromAPI["username"];
+  createdAt = document.querySelector("#created-at");
+  createdAt.innerText = userInformationFromAPI["created_at"];
+}
+
+loadProfileInformation();
+
+/**
  * 사용자가 이미지 선택을 완료하면,
  * 1. 업로드한 이미지를 띄워주고
  * 2. 서버에 이미지를 업로드합니다.
  * 3. 이미지 업로드의 성공 여부에 따라 에러 메시지를 띄워줍니다.
  * 4. 이미지 업로드가 성공한다면 그것의 path 를 숨겨져 있는 input 태그의 value 로 넣어줍니다.
  */
- async function getImageResponse(event) {
+async function getImageResponse(event) {
   loadPreviewImage(event);
   result = await submitImage();
   // 201로 성공적으로 이미지가 업로드되었다면,
@@ -46,10 +99,7 @@ async function submitImage() {
 
   // header 설정
   var myHeaders = new Headers();
-  myHeaders.append(
-    "Authorization",
-    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjcwMDc2ODM2LCJqdGkiOiJkYjFjYzVkMy01N2EwLTQxOTYtYmRmNi0zNzVhNWRiZTcwNTQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoieW91bmdqb28iLCJuYmYiOjE2NzAwNzY4MzYsImV4cCI6MTY3MDE2MzIzNn0.yiZNeIN7aq-5mxk3_MXnRgIZiAATYdAPBREsy6U3dvo"
-  );
+  myHeaders.append("Authorization", `Bearer ${ACCESS_TOKEN}`);
 
   formData.append("image", fileInput.files[0]);
 
@@ -60,11 +110,7 @@ async function submitImage() {
   };
 
   // 이미지 업로드 API 요청
-  const result = await fetch(
-    "http://127.0.0.1:5000/upload/profile/image/",
-    requestOptions
-  );
-
+  const result = await fetch(PROFILE_IMAGE_UPLOAD_API_URL, requestOptions);
   return result;
 }
 
@@ -103,10 +149,7 @@ function serialize(rawData) {
 async function submitProfileData() {
   // 인증을 위한 header 설정
   var myHeaders = new Headers();
-  myHeaders.append(
-    "Authorization",
-    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjcwMDc2ODM2LCJqdGkiOiJkYjFjYzVkMy01N2EwLTQxOTYtYmRmNi0zNzVhNWRiZTcwNTQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoieW91bmdqb28iLCJuYmYiOjE2NzAwNzY4MzYsImV4cCI6MTY3MDE2MzIzNn0.yiZNeIN7aq-5mxk3_MXnRgIZiAATYdAPBREsy6U3dvo"
-  );
+  myHeaders.append("Authorization", `Bearer ${ACCESS_TOKEN}`);
   myHeaders.append("Content-Type", "application/json");
 
   // 보낼 데이터 설정
@@ -121,14 +164,12 @@ async function submitProfileData() {
   };
 
   // 프로필 정보 수정 요청
-  const response = await fetch(
-    "http://127.0.0.1:5000/mypage/1/",
-    requestOptions
-  );
+  userId = await decodeJWT(ACCESS_TOKEN)["user_id"];
+  const response = await fetch(MYPAGE_API_URL + userId + "/", requestOptions);
   console.log(response.status);
   if (response.status == 200) {
-    // window.location.href = "http://localhost:3000/flastagram/posts/";
-    alert(JSON.stringify(await response.json()));
+    alert("프로필 사진 수정이 완료되었습니다.");
+    window.close();
   } else {
     alert(JSON.stringify(await response.json()));
   }

@@ -50,11 +50,7 @@ async function submitImage() {
   };
 
   // 이미지 업로드 API 요청
-  const result = await fetch(
-    "http://127.0.0.1:5000/upload/post/image/",
-    options
-  );
-
+  const result = await fetch(POST_IMAGE_UPLOAD_API_URL, options);
   return result;
 }
 
@@ -78,7 +74,6 @@ function serialize(rawData) {
       continue;
     }
     if (value == "") {
-      console.log("hello");
       serializedData[key] = null;
     }
     serializedData[key] = value;
@@ -92,10 +87,7 @@ function serialize(rawData) {
 async function submitPostData() {
   // 인증을 위한 header 설정
   var myHeaders = new Headers();
-  myHeaders.append(
-    "Authorization",
-    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjY4OTQyOTU0LCJqdGkiOiI2YWM5OWY5NC05Y2QzLTQ2YjgtYmRhOS01Yzk3ZTA5MjA5MDEiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoieW91bmdqb28iLCJuYmYiOjE2Njg5NDI5NTQsImV4cCI6MTY2OTAyOTM1NH0.nLhcHBl7rLemE04ZjkUVMjwU73524rfBh7lfL0vDdEM"
-  );
+  myHeaders.append("Authorization", `Bearer ${ACCESS_TOKEN}`);
   myHeaders.append("Content-Type", "application/json");
 
   // 보낼 데이터 설정
@@ -110,10 +102,10 @@ async function submitPostData() {
   };
 
   // 게시물 저장 요청
-  const response = await fetch("http://127.0.0.1:5000/posts/", requestOptions);
+  const response = await fetch(POST_LIST_API_URL, requestOptions);
   console.log(response.status);
   if (response.status == 201) {
-    window.location.href = "http://localhost:3000/flastagram/posts/";
+    window.close();
   } else {
     alert(JSON.stringify(await response.json()));
   }
