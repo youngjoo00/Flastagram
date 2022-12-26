@@ -11,18 +11,23 @@ class PostSchema(ma.SQLAlchemyAutoSchema):
     """
 
     image = fields.String(required=True)
-
     created_at = fields.DateTime(format="%Y-%m-%d,%H:%M:%S")
     updated_at = fields.DateTime(format="%Y-%m-%d,%H:%M:%S")
     author = fields.Nested(AuthorSchema)
+    liker_count = Method("get_liker_count")
+    is_like = Method("get_is_like")
 
+    def get_liker_count(self, obj):
+        return obj.get_liker_count()
+
+    def get_is_like(self, obj):
+        if self.context.get("user"):
+            return obj.is_like(self.context["user"])
+        
     class Meta:
         model = PostModel
-        # 보기 전용 필드들을 정의
-        dump_only = [
-            "author_name",
-        ]
         exclude = ("author_id",)
+        dump_only = "is_like"
         load_instance = True
         include_fk = True
         ordered = True
