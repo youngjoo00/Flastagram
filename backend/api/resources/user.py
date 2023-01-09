@@ -1,3 +1,4 @@
+import random
 from api.models.user import UserModel, RefreshTokenModel
 from flask_restful import Resource, request
 from api.schemas.user import UserRegisterSchema, UserSchema
@@ -14,7 +15,24 @@ from werkzeug.security import check_password_hash
 
 register_schema = UserRegisterSchema()
 user_schema = UserSchema()
+user_list_schema = UserSchema(many=True, exclude=["email", "created_at"])
 
+class Recommend(Resource):
+    @classmethod
+    @jwt_required()
+    def get(cls):
+        request_user = UserModel.find_by_username(get_jwt_identity())
+        return user_list_schema.dump(
+            random.sample( # import random
+                list(
+                    set(UserModel.query.all())
+                    - set([request_user])
+                    - set(request_user.followed.all())
+                ),
+                2,
+            )
+        )
+        
 class MyPage(Resource):
     """
     마이페이지를 처리합니다.
@@ -180,3 +198,31 @@ class UserRegister(Resource):
             user.save_to_db()
             return {"Success": f"{user.username} 님, 가입을 환영합니다!"}, 201
         
+class Follow(Resource):
+    """
+    특정한 사용자를 팔로우/언팔로우합니다.
+    """
+
+    @classmethod
+    @jwt_required()
+    def put(cls, id):
+        request_user = UserModel.find_by_username(get_jwt_identity())
+        user_to_follow = UserModel.find_by_id(id)
+        if not request_user:
+            return {"error": "사용자를 찾을 수 없습니다."}, 400
+        if id == get_jwt().get("user_id"):
+            return {"error": "스스로를 팔로우할 수 없습니다."}, 400
+        request_user.follow(user_to_follow)
+        return "", 204
+
+    @classmethod
+    @jwt_required()
+    def delete(cls, id):
+        request_user = UserModel.find_by_username(get_jwt_identity())
+        user_to_unfollow = UserModel.find_by_id(id)
+        if not request_user:
+            return {"error": "사용자를 찾을 수 없습니다."}, 400
+        if id == get_jwt().get("user_id"):
+            return {"error": "스스로를 팔로우할 수 없습니다."}, 400
+        request_user.unfollow(user_to_unfollow)
+        return "", 204

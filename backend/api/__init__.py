@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
-from flask_uploads import configure_uploads, patch_request_class  # 추가!
+from utils.flask_uploads import configure_uploads, patch_request_class  # 추가!
 from marshmallow import ValidationError
 from api.utils.image_upload import IMAGE_SET
 
@@ -15,8 +15,8 @@ from .ma import ma
 from .models import user, post, comment
 
 
-from .resources.post import PostList, Post
-from .resources.user import UserRegister, UserLogin, RefreshToken, MyPage
+from .resources.post import PostList, Post, PostLike
+from .resources.user import UserRegister, UserLogin, RefreshToken, MyPage, Follow, Recommend
 from .resources.image import PostImageUpload, ProfileImageUpload, Image
 from .resources.comment import CommentList, CommentDetail
 
@@ -80,9 +80,13 @@ def create_app():
             401,
         )
 
+    # 팔로우 API
+    api.add_resource(Follow, "/users/<int:id>/followers/")
+
     # 게시물 API
     api.add_resource(PostList, "/posts/")
     api.add_resource(Post, "/posts/<int:id>")
+    api.add_resource(PostLike, "/posts/<int:id>/likes/")
 
     # 회원가입, 로그인 API
     api.add_resource(UserRegister, "/register/")
@@ -103,4 +107,7 @@ def create_app():
         CommentDetail, "/posts/<int:post_id>/comments/<int:comment_id>/"
     )
 
+    # 랜덤추천 API
+    api.add_resource(Recommend, "/users/recommend-followers/")
+    
     return app
