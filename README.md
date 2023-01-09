@@ -26,20 +26,17 @@ Flask, JavaScript
 
 ### 기능 1 (BackEnd)
 
-주로 api 폴더에서 기능을 구현함
-api/resources는 게시물, 유저, 댓글에 관한 CRUD 기능을 구현
+게시물, 유저, 댓글 CRUD 기능 구현
 
 사용자가 어떠한 기능을 이용하기 위해 CRUD 기능을 이용할 때 1차로 resources에서 요청을 받고 -> 필요한 스키마, 모델이 있다면 api/schema, api/model 에 접근
 
 ### 기능 2 (FrontEnd)
 
-assets/js/post_create.js : 사용자가 게시물을 작성한다면, 페이지에 띄우는 역할
+사용자가 필요한 전반적인 페이지 구현
 
-assets/js/post_list.js : 사용자가 Flastagram 의 post_list.html 에서 보여주는 메인 페이지를 보려고 할 때 게시물들의 목록을 페이지네이션을 통해 10개의 게시물을 보여주고, 무한스크롤을 구현하여 스크롤을 내린다면 다음 게시물 10개를 보여줌
+무한스크롤
 
-assets/js/login.js : Token을 활용한 사용자 로그인
-
-assets/js/profile.js : 이미지 업로드를 이용한 사용자 프로필 화면 수정
+JWT Token 활용한 사용자 로그인 / 회원가입
 
 ### 기능 3
 
