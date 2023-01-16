@@ -1,3 +1,4 @@
+import random
 from api.models.user import UserModel, RefreshTokenModel
 from flask_restful import Resource, request
 from api.schemas.user import UserRegisterSchema, UserSchema
@@ -14,7 +15,24 @@ from werkzeug.security import check_password_hash
 
 register_schema = UserRegisterSchema()
 user_schema = UserSchema()
+user_list_schema = UserSchema(many=True, exclude=["email", "created_at"])
 
+class Recommend(Resource):
+    @classmethod
+    @jwt_required()
+    def get(cls):
+        request_user = UserModel.find_by_username(get_jwt_identity())
+        return user_list_schema.dump(
+            random.sample( # import random
+                list(
+                    set(UserModel.query.all())
+                    - set([request_user])
+                    - set(request_user.followed.all())
+                ),
+                2,
+            )
+        )
+        
 class MyPage(Resource):
     """
     마이페이지를 처리합니다.
@@ -72,6 +90,9 @@ class UserLogin(MethodView):
         data = request.get_json()
         user = UserModel.find_by_email(data["email"])
 
+        if not user:
+            return {"Error" : "사용자를 찾을 수 없습니다."}, 404
+        
         additional_claims = {"user_id" : user.id}
         
         if user and check_password_hash(user.password, data["password"]):
