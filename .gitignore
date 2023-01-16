@@ -1,9 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/node,flask,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,flask,python
 
-database
-workflows
-fly.toml
+.database
+.workflows
+.fly.toml
 
 ### Flask ###
 instance/*
